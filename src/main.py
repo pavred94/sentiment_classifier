@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
+from typing import Tuple
 
 from helper import get_lstm_model, get_tokenizer, reverse_label_encoding
 
@@ -82,7 +83,12 @@ async def chat_post(request: Request, user_input: str = Form(...)) -> HTMLRespon
         "llm_response": llm_response
     })
 
-def predict_review(review_data: ReviewInput):
+def predict_review(review_data: ReviewInput) -> Tuple[int, str]:
+    """
+    Predicts the score of the review based on the user's input.
+    :param review_data: Review input object.
+    :return: Predicted review score and corresponding LLM response.
+    """
     encoding = BERT_TOKENIZER(
         review_data.review,
         add_special_tokens=True,
@@ -99,6 +105,12 @@ def predict_review(review_data: ReviewInput):
     return pred_score, generate_llm_response(pred_score, review_data.review)
 
 def generate_llm_response(pred_score: str, review: str) -> str:
+    """
+    Generate the LLM response based on the user's review and the model's prdicted score.
+    :param pred_score: Predicted review score.
+    :param review: User's review.
+    :return: LLM response.
+    """
     prompt = PROMPT_TEMPLATE.invoke({"predicted_review_score": pred_score, "review": review})
     return LLM.invoke(prompt).content
 
