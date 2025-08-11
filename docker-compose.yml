@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"   # Uvicorn
+      - "11434:11434" # Ollama
+    volumes:
+      - ollama_models:/root/.ollama
+
+volumes:
+  ollama_models:
