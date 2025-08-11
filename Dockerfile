@@ -2,21 +2,37 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y
+# Install dependencies for Ollama & Supervisord
+RUN apt-get update && apt-get install -y \
+    curl \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Install Ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# ** Copy files into docker container **
+
+# Install Python dependencies for app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
+# App code, review classifier weights
 COPY src/ ./src
 COPY static/ ./static
 COPY templates/ ./templates
 COPY lstm_sentiment_classifier.pt .
 
-# Expose port
-EXPOSE 8000
+# Supervisor config
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Run the app
-WORKDIR /app/src
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Startup script
+COPY init_container.sh ./init_container.sh
+RUN chmod +x ./init_container.sh
+
+# Expose port - Uvicorn & Ollama
+EXPOSE 8000
+EXPOSE 11434
+
+# Run startup script
+CMD ["./init_container.sh"]
