@@ -4,7 +4,8 @@
 
 import os
 import random
-import sys
+from typing import List
+
 import torch
 import torch.nn as nn
 import numpy as np
@@ -14,21 +15,16 @@ from torch.utils.data import DataLoader
 import torchtext
 
 torchtext.disable_torchtext_deprecation_warning()
-from transformers import BertTokenizer
 from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from model_classes import SentimentDataset, LSTMClassifier
-from helper import reverse_label_encoding
+from helper import LSTMToolkit, reverse_label_encoding, SentimentDataset
 
-# Define BERT tokenizer
-PRE_TRAINED_MODEL_NAME = 'bert-base-cased'
-BERT_TOKENIZER = BertTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
-BERT_TOKENIZER.model_max_length = sys.maxsize
-
+# For LSTM model definition and BERT tokenizer
+LSTM_TOOLKIT = LSTMToolkit()
 
 def _eval_model(model, val_dataloader, scheduler, loss_fn):
     # Predict validation set
@@ -54,7 +50,7 @@ def _train_model(model, dataloader, optimizer, loss_fn, epoch_idx, n_epochs):
     model.train()
     training_acc, training_loss = 0.0, 0.0
     # Add progress bar
-    tqdm_dataloader = tqdm(dataloader, unit="batch", leave=False)
+    tqdm_dataloader = tqdm(dataloader, unit="batch")
     for X_batch, y_batch, X_batch_text_len in tqdm_dataloader:
         # Zero out gradients
         optimizer.zero_grad()
@@ -73,7 +69,13 @@ def _train_model(model, dataloader, optimizer, loss_fn, epoch_idx, n_epochs):
     return training_acc / len(dataloader), training_loss / len(dataloader)
 
 
-def train_model(model, train_dataloader, val_dataloader, loss_fn, optimizer, n_epochs):
+def train_model(model,
+                train_dataloader,
+                val_dataloader,
+                loss_fn,
+                optimizer,
+                n_epochs,
+                model_weights_fp="../lstm_sentiment_classifier.pt"):
     # Train model
     best_val_loss = np.inf
     best_y_val_pred = None
@@ -97,7 +99,7 @@ def train_model(model, train_dataloader, val_dataloader, loss_fn, optimizer, n_e
         if avg_val_loss_list[i] < best_val_loss:
             print("MODEL SAVED!")
             best_val_loss = avg_val_loss_list[i]
-            torch.save(model.state_dict(), '../lstm_sentiment_classifier.pt')
+            torch.save(model.state_dict(), model_weights_fp)
             best_y_val_pred = y_val_pred
         # Print model training & validation stats
         print(f"Training Accuracy: {avg_training_acc_list[i] * 100:.2f}% | "
@@ -147,15 +149,8 @@ def open_json(filepath, max_entries=100000, num_entries=100, min_text_len=-1, ma
 def my_collate(batch):
     labels = torch.tensor([i["label"] for i in batch], dtype=torch.long)
     feature_text = [i["sentence"] for i in batch]
-    encoding = BERT_TOKENIZER(
-        feature_text,
-        add_special_tokens=True,
-        return_token_type_ids=False,
-        padding=True,
-        return_attention_mask=False,
-        return_length=True,
-        return_tensors='pt',
-    )
+    # Tokenize
+    encoding = LSTM_TOOLKIT.encode_text(feature_text)
     # Sort based on descending text lengths pre-padding
     text_lengths = encoding["length"]
     sorted_indices = sorted(range(len(text_lengths)), key=lambda x: text_lengths[x], reverse=True)
@@ -165,7 +160,14 @@ def my_collate(batch):
     return tokenized_text, labels, text_lengths
 
 
-def gen_eval_line_plot(training_list, val_list, title, y_label, x_label="Epochs"):
+def gen_eval_line_plot(training_list: List[float],
+                       val_list: List[float],
+                       title: str,
+                       y_label: str,
+                       x_label: str = "Epochs") -> None:
+    """
+    Generates two line plots: training and validation.
+    """
     plt.plot(training_list, label="Training")
     plt.plot(val_list, label="Validation")
     plt.xlabel(x_label)
@@ -210,17 +212,11 @@ def main():
                                 shuffle=False)
 
     # Train model
-    model = LSTMClassifier(vocab_size=len(BERT_TOKENIZER),
-                           embedding_dim=100,
-                           hidden_dim=100,
-                           n_layers=1,
-                           bidirectional=True,
-                           dropout=0.0,
-                           output_dim=labels.nunique())
+    model = LSTM_TOOLKIT.model
 
     # Define loss function & back-propagation method
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=5e-4)
+    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=5e-4)
 
     avg_training_acc_list, avg_training_loss_list, avg_val_acc_list, avg_val_loss_list, y_val_pred = \
         train_model(model=model,
@@ -228,7 +224,8 @@ def main():
                     val_dataloader=val_dataloader,
                     n_epochs=15,
                     loss_fn=loss_fn,
-                    optimizer=optimizer)
+                    optimizer=optimizer,
+                    model_weights_fp="../lstm_sentiment_classifier_TEST.pt")
 
     # Evaluate model
 
