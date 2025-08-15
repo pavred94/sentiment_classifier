@@ -10,7 +10,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from typing import Tuple
 
-from helper import get_lstm_model, get_tokenizer, reverse_label_encoding
+from helper import LSTMToolkit, reverse_label_encoding
 
 
 class ReviewInput(BaseModel):
@@ -28,15 +28,15 @@ app.mount("/static", StaticFiles(directory="../static"), name="static")
 # Set up template rendering
 templates = Jinja2Templates(directory="../templates")
 
-# Load pre-defined tokenizer and model
-BERT_TOKENIZER = get_tokenizer()
-MODEL = get_lstm_model(vocab_size=len(BERT_TOKENIZER))
+# Load model
+LSTM_TOOLKIT = LSTMToolkit()
+MODEL = LSTM_TOOLKIT.model
 MODEL.load_state_dict(torch.load("../lstm_sentiment_classifier.pt", weights_only=True))
 MODEL.eval()
 
 # Define LLM prompt
-MODEL_NAME = "llama3.1"
-LLM = ChatOllama(model=MODEL_NAME, temperature=0.0)
+LLM_NAME = "llama3.1"
+LLM = ChatOllama(model=LLM_NAME, temperature=0.0)
 TEMPLATE = """
 You are a commentator that reviews other reviews.
 Generate a brief mocking response based ONLY on the {predicted_review_score} and {review}. 
@@ -89,15 +89,7 @@ def predict_review(review_data: ReviewInput) -> Tuple[int, str]:
     :param review_data: Review input object.
     :return: Predicted review score and corresponding LLM response.
     """
-    encoding = BERT_TOKENIZER(
-        review_data.review,
-        add_special_tokens=True,
-        return_token_type_ids=False,
-        padding=True,
-        return_attention_mask=False,
-        return_length=True,
-        return_tensors='pt',
-    )
+    encoding = LSTM_TOOLKIT.encode_text(review_data.review)
 
     pred_score = MODEL(encoding["input_ids"], encoding["length"])
     pred_score = reverse_label_encoding(torch.argmax(pred_score, dim=1).detach().numpy()).item()
@@ -106,7 +98,7 @@ def predict_review(review_data: ReviewInput) -> Tuple[int, str]:
 
 def generate_llm_response(pred_score: str, review: str) -> str:
     """
-    Generate the LLM response based on the user's review and the model's prdicted score.
+    Generate the LLM response based on the user's review and the model's predicted score.
     :param pred_score: Predicted review score.
     :param review: User's review.
     :return: LLM response.
