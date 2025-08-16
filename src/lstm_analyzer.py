@@ -4,13 +4,13 @@
 
 import os
 import random
-from typing import List
-
 import torch
 import torch.nn as nn
 import numpy as np
 import pandas as pd
 import torch.optim as optim
+from typing import List, Tuple, Union, Any
+from numpy.typing import NDArray
 from torch.utils.data import DataLoader
 import torchtext
 
@@ -26,7 +26,11 @@ from helper import LSTMToolkit, reverse_label_encoding, SentimentDataset
 # For LSTM model definition and BERT tokenizer
 LSTM_TOOLKIT = LSTMToolkit()
 
-def _eval_model(model, val_dataloader, scheduler, loss_fn):
+
+def _eval_model(model: nn.Module,
+                val_dataloader: DataLoader,
+                scheduler: torch.optim.lr_scheduler.ReduceLROnPlateau,
+                loss_fn: nn.CrossEntropyLoss) -> Tuple[float, float, List[float]]:
     # Predict validation set
     model.eval()
     val_acc, val_loss = 0.0, 0.0
@@ -46,7 +50,12 @@ def _eval_model(model, val_dataloader, scheduler, loss_fn):
     return val_acc / len(val_dataloader), avg_val_loss, all_y_pred_list
 
 
-def _train_model(model, dataloader, optimizer, loss_fn, epoch_idx, n_epochs):
+def _train_model(model: nn.Module,
+                 dataloader: DataLoader,
+                 optimizer: optim.Optimizer,
+                 loss_fn: nn.CrossEntropyLoss,
+                 epoch_idx: int,
+                 n_epochs: int) -> Tuple[float, float]:
     model.train()
     training_acc, training_loss = 0.0, 0.0
     # Add progress bar
@@ -69,13 +78,14 @@ def _train_model(model, dataloader, optimizer, loss_fn, epoch_idx, n_epochs):
     return training_acc / len(dataloader), training_loss / len(dataloader)
 
 
-def train_model(model,
-                train_dataloader,
-                val_dataloader,
-                loss_fn,
-                optimizer,
-                n_epochs,
-                model_weights_fp="../lstm_sentiment_classifier.pt"):
+def train_model(model: nn.Module,
+                train_dataloader: DataLoader,
+                val_dataloader: DataLoader,
+                loss_fn: nn.CrossEntropyLoss,
+                optimizer: optim.Optimizer,
+                n_epochs: int,
+                model_weights_fp: str="../lstm_sentiment_classifier.pt") \
+        -> Tuple[List[float], List[float], List[float], List[float], NDArray[np.int_]]:
     # Train model
     best_val_loss = np.inf
     best_y_val_pred = None
@@ -125,7 +135,11 @@ def seed_everything(seed: int):
     torch.cuda.manual_seed(seed)
 
 
-def open_json(filepath, max_entries=100000, num_entries=100, min_text_len=-1, max_text_len=-1):
+def open_json(filepath: str,
+              max_entries: int = 100000,
+              num_entries: int = 100,
+              min_text_len: int = -1,
+              max_text_len: int = -1) -> Union[pd.DataFrame, None]:
     if min_text_len > max_text_len > 0:
         return None
     df = pd.read_json(filepath, lines=True, nrows=max_entries)
@@ -146,7 +160,7 @@ def open_json(filepath, max_entries=100000, num_entries=100, min_text_len=-1, ma
                       for curr_rating in df.binned_rating.unique()])
 
 
-def my_collate(batch):
+def my_collate(batch: List[Any]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     labels = torch.tensor([i["label"] for i in batch], dtype=torch.long)
     feature_text = [i["sentence"] for i in batch]
     # Tokenize
@@ -181,9 +195,9 @@ def main():
     seed_everything(123)
 
     # Import data
-    data_df = open_json(filepath="../Movies_and_TV.jsonl",
-                        max_entries=2000000,
-                        num_entries=300000,
+    data_df = open_json(filepath=os.path.join(os.getcwd(), "Movies_and_TV.jsonl"),
+                        max_entries=200000,
+                        num_entries=300,
                         min_text_len=25)[["binned_rating", "text"]]
 
     print(f"Number of missing values: {data_df.isnull().sum().sum()}")
