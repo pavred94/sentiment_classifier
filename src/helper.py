@@ -67,7 +67,7 @@ class _LSTMClassifier(nn.Module):
         embedded = self.embedding(text)
         # embedded = [batch size, sent_len, emb dim]
 
-        packed_embedded = pack_padded_sequence(embedded, text_lengths, batch_first=True)
+        packed_embedded = pack_padded_sequence(embedded, text_lengths, batch_first=True, enforce_sorted=False)
 
         packed_output, (hidden, cell) = self.lstm(packed_embedded)
         # hidden = [batch size, num layers * num directions,hid dim]
