@@ -160,17 +160,19 @@ def open_json(filepath: str,
                       for curr_rating in df.binned_rating.unique()])
 
 
-def my_collate(batch: List[Any]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def my_collate(batch: List[Any], is_train: bool = True) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     labels = torch.tensor([i["label"] for i in batch], dtype=torch.long)
     feature_text = [i["sentence"] for i in batch]
     # Tokenize
     encoding = LSTM_TOOLKIT.encode_text(feature_text)
     # Sort based on descending text lengths pre-padding
     text_lengths = encoding["length"]
-    sorted_indices = sorted(range(len(text_lengths)), key=lambda x: text_lengths[x], reverse=True)
-    tokenized_text = encoding["input_ids"][sorted_indices]
-    text_lengths = text_lengths[sorted_indices]
-    labels = labels[sorted_indices]
+    tokenized_text = encoding["input_ids"]
+    if is_train:
+        sorted_indices = sorted(range(len(text_lengths)), key=lambda x: text_lengths[x], reverse=True)
+        tokenized_text = tokenized_text[sorted_indices]
+        text_lengths = text_lengths[sorted_indices]
+        labels = labels[sorted_indices]
     return tokenized_text, labels, text_lengths
 
 
@@ -196,8 +198,8 @@ def main():
 
     # Import data
     data_df = open_json(filepath=os.path.join(os.getcwd(), "Movies_and_TV.jsonl"),
-                        max_entries=200000,
-                        num_entries=300,
+                        max_entries=20000,
+                        num_entries=1000,
                         min_text_len=25)[["binned_rating", "text"]]
 
     print(f"Number of missing values: {data_df.isnull().sum().sum()}")
@@ -222,7 +224,7 @@ def main():
                                   shuffle=True)
     val_dataloader = DataLoader(val_ds,
                                 batch_size=128,
-                                collate_fn=my_collate,
+                                collate_fn=lambda batch: my_collate(batch, is_train=False),
                                 shuffle=False)
 
     # Train model
@@ -236,7 +238,7 @@ def main():
         train_model(model=model,
                     train_dataloader=train_dataloader,
                     val_dataloader=val_dataloader,
-                    n_epochs=15,
+                    n_epochs=5,
                     loss_fn=loss_fn,
                     optimizer=optimizer,
                     model_weights_fp="../lstm_sentiment_classifier_TEST.pt")
