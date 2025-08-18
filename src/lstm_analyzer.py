@@ -31,7 +31,10 @@ def _eval_model(model: nn.Module,
                 val_dataloader: DataLoader,
                 scheduler: torch.optim.lr_scheduler.ReduceLROnPlateau,
                 loss_fn: nn.CrossEntropyLoss) -> Tuple[float, float, List[float]]:
-    # Predict validation set
+    """
+    Validate model - 1 epoch
+    :return: The average validation accuracy and loss for this epoch.
+    """
     model.eval()
     val_acc, val_loss = 0.0, 0.0
     all_y_pred_list = []
@@ -56,6 +59,10 @@ def _train_model(model: nn.Module,
                  loss_fn: nn.CrossEntropyLoss,
                  epoch_idx: int,
                  n_epochs: int) -> Tuple[float, float]:
+    """
+    Train model - 1 epoch
+    :return: The average training accuracy and loss for this epoch.
+    """
     model.train()
     training_acc, training_loss = 0.0, 0.0
     # Add progress bar
@@ -86,6 +93,18 @@ def train_model(model: nn.Module,
                 n_epochs: int,
                 model_weights_fp: str="../lstm_sentiment_classifier.pt") \
         -> Tuple[List[float], List[float], List[float], List[float], NDArray[np.int_]]:
+    """
+    Train and validate the model.
+    :param model: Model to be trained.
+    :param train_dataloader: Dataloader containing training data.
+    :param val_dataloader: Dataloader containing validation data.
+    :param loss_fn: Loss function.
+    :param optimizer: Optimizer for back-propagation
+    :param n_epochs: Number of epochs to train the model.
+    :param model_weights_fp: Filepath to save best model weights.
+    :return: List for average training/validation accuracy and loss over epochs.
+             The best set of validation set predictions based on the model with the lowest loss.
+    """
     # Train model
     best_val_loss = np.inf
     best_y_val_pred = None
@@ -98,8 +117,11 @@ def train_model(model: nn.Module,
                                                            threshold_mode='rel',
                                                            factor=0.1)
     for i, epoch in enumerate(range(n_epochs)):
-        avg_training_acc_list[i], avg_training_loss_list[i] = _train_model(model, train_dataloader,
-                                                                           optimizer, loss_fn, epoch,
+        avg_training_acc_list[i], avg_training_loss_list[i] = _train_model(model,
+                                                                           train_dataloader,
+                                                                           optimizer,
+                                                                           loss_fn,
+                                                                           epoch,
                                                                            n_epochs)
         avg_val_acc_list[i], avg_val_loss_list[i], y_val_pred = _eval_model(model, val_dataloader, scheduler, loss_fn)
         # Calculate gradient norm after each epoch
@@ -135,11 +157,24 @@ def seed_everything(seed: int):
     torch.cuda.manual_seed(seed)
 
 
-def open_json(filepath: str,
-              max_entries: int = 100000,
-              num_entries: int = 100,
-              min_text_len: int = -1,
-              max_text_len: int = -1) -> Union[pd.DataFrame, None]:
+def get_data(filepath: str,
+             max_entries: int = 100000,
+             num_entries: int = 100,
+             min_text_len: int = -1,
+             max_text_len: int = -1) -> Union[pd.DataFrame, None]:
+    """
+    Retrieves and pre-process review data.
+    Filters data based on min and max text length.
+    Bins labels as follows: 1,2 -> Negative (0); 3 -> Neutral (1); 4,5 -> Positive (2).
+    Samples 'num_entries' from 'max_entries' dataset without replacement such that
+        all binned labels are equally represented.
+    :param filepath: Path to data in JSON format.
+    :param max_entries: Maximum number of entries to load into memory.
+    :param num_entries: Number of entries to sample from max_entries.
+    :param min_text_len: Minimum length of text in final dataset.
+    :param max_text_len: Maximum length of text in final dataset.
+    :return: Dataframe with 'num_entries' rows.
+    """
     if min_text_len > max_text_len > 0:
         return None
     df = pd.read_json(filepath, lines=True, nrows=max_entries)
@@ -153,7 +188,7 @@ def open_json(filepath: str,
     df['binned_rating'] = df['rating'].map({1: 0, 2: 0,
                                             3: 1,
                                             4: 2, 5: 2})
-    # Get number of unique ratings
+    # Get number of unique labels
     num_labels = df.binned_rating.nunique()
     entries_per_label = num_entries // num_labels
     return pd.concat([df.loc[df.binned_rating.isin([curr_rating])].sample(entries_per_label, replace=False)
@@ -161,6 +196,12 @@ def open_json(filepath: str,
 
 
 def my_collate(batch: List[Any], is_train: bool = True) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Tokenize, encode and pad text for each batch. Sorts in descending order if batch belongs to training set.
+    :return: Three tensors: 1) Tokenized, encoded and padded text,
+                            2) Corresponding labels,
+                            3) Corresponding lengths pre-padding.
+    """
     labels = torch.tensor([i["label"] for i in batch], dtype=torch.long)
     feature_text = [i["sentence"] for i in batch]
     # Tokenize
@@ -197,10 +238,16 @@ def main():
     seed_everything(123)
 
     # Import data
-    data_df = open_json(filepath=os.path.join(os.getcwd(), "Movies_and_TV.jsonl"),
-                        max_entries=20000,
-                        num_entries=1000,
-                        min_text_len=25)[["binned_rating", "text"]]
+    data_df = get_data(filepath=os.path.join(os.getcwd(), "Movies_and_TV.jsonl"),
+                       max_entries=20000,
+                       num_entries=1000,
+                       min_text_len=25)
+
+    if data_df is None:
+        raise ValueError("Invalid input: min_text_len > max_text_len is not valid.")
+
+    # Features = text; label = binned_rating
+    data_df = data_df[["binned_rating", "text"]]
 
     print(f"Number of missing values: {data_df.isnull().sum().sum()}")
 
