@@ -49,7 +49,8 @@ def _eval_model(model: nn.Module,
             val_acc += (y_pred == y_batch).float().mean()
             val_loss += float(loss)
     avg_val_loss = val_loss / len(val_dataloader)
-    scheduler.step(avg_val_loss)
+    if scheduler is not None:
+        scheduler.step(avg_val_loss)
     return val_acc / len(val_dataloader), avg_val_loss, all_y_pred_list
 
 
@@ -91,6 +92,7 @@ def train_model(model: nn.Module,
                 loss_fn: nn.CrossEntropyLoss,
                 optimizer: optim.Optimizer,
                 n_epochs: int,
+                scheduler: optim.lr_scheduler.ReduceLROnPlateau=None,
                 model_weights_fp: str="../lstm_sentiment_classifier.pt") \
         -> Tuple[List[float], List[float], List[float], List[float], NDArray[np.int_]]:
     """
@@ -101,6 +103,7 @@ def train_model(model: nn.Module,
     :param loss_fn: Loss function.
     :param optimizer: Optimizer for back-propagation
     :param n_epochs: Number of epochs to train the model.
+    :param scheduler: Learning rate scheduler.
     :param model_weights_fp: Filepath to save best model weights.
     :return: List for average training/validation accuracy and loss over epochs.
              The best set of validation set predictions based on the model with the lowest loss.
@@ -110,12 +113,6 @@ def train_model(model: nn.Module,
     best_y_val_pred = None
     avg_training_acc_list, avg_training_loss_list, avg_val_acc_list, avg_val_loss_list = \
         ([0] * n_epochs for i in range(4))
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
-                                                           mode='min',
-                                                           patience=5,
-                                                           threshold=1e-4,
-                                                           threshold_mode='rel',
-                                                           factor=0.1)
     for i, epoch in enumerate(range(n_epochs)):
         avg_training_acc_list[i], avg_training_loss_list[i] = _train_model(model,
                                                                            train_dataloader,
@@ -139,7 +136,7 @@ def train_model(model: nn.Module,
               f"Validation Accuracy: {avg_val_acc_list[i] * 100:.2f}% | "
               f"Validation Loss: {avg_val_loss_list[i]:.4f}\n"
               f"Gradient Norm: {grad_norm:.4f}\n"
-              f"LR: {scheduler.get_last_lr()}\n")
+              f"Learning Rate: {optimizer.param_groups[0]['lr'] if scheduler is None else scheduler.get_last_lr()[0]:.2e}\n")
     return (avg_training_acc_list, avg_training_loss_list,
             avg_val_acc_list, avg_val_loss_list, np.hstack(best_y_val_pred, dtype=int))
 
@@ -239,17 +236,15 @@ def main():
 
     # Import data
     data_df = get_data(filepath=os.path.join(os.getcwd(), "Movies_and_TV.jsonl"),
-                       max_entries=20000,
-                       num_entries=1000,
-                       min_text_len=25)
+                       max_entries=2000000,
+                       num_entries=400000,
+                       min_text_len=20)
 
     if data_df is None:
         raise ValueError("Invalid input: min_text_len > max_text_len is not valid.")
 
     # Features = text; label = binned_rating
     data_df = data_df[["binned_rating", "text"]]
-
-    print(f"Number of missing values: {data_df.isnull().sum().sum()}")
 
     # Separate into features and labels
     features = data_df["text"]
@@ -279,16 +274,26 @@ def main():
 
     # Define loss function & back-propagation method
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=5e-4)
+    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=5e-3)
+
+    # Scheduler to reduce LR by factor 0.1 if validation loss plateaus, i.e.,
+    #   no relative improvement >1e-4 for 3 epochs.
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
+                                                           mode='min',
+                                                           patience=3,
+                                                           threshold=1e-4,
+                                                           threshold_mode='rel',
+                                                           factor=0.1)
 
     avg_training_acc_list, avg_training_loss_list, avg_val_acc_list, avg_val_loss_list, y_val_pred = \
         train_model(model=model,
                     train_dataloader=train_dataloader,
                     val_dataloader=val_dataloader,
-                    n_epochs=5,
+                    n_epochs=12,
                     loss_fn=loss_fn,
                     optimizer=optimizer,
-                    model_weights_fp="../lstm_sentiment_classifier_TEST.pt")
+                    scheduler=scheduler,
+                    model_weights_fp="lstm_sentiment_classifier_TEST.pt")
 
     # Evaluate model
 
