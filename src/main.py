@@ -31,15 +31,15 @@ templates = Jinja2Templates(directory="../templates")
 # Load model
 LSTM_TOOLKIT = LSTMToolkit()
 MODEL = LSTM_TOOLKIT.model
-MODEL.load_state_dict(torch.load("../lstm_sentiment_classifier.pt", weights_only=True))
+MODEL.load_state_dict(torch.load("../classifier/lstm_sentiment_classifier.pt", weights_only=True))
 MODEL.eval()
 
 # Define LLM prompt
 LLM_NAME = "llama3.1"
 LLM = ChatOllama(model=LLM_NAME, temperature=0.0)
 TEMPLATE = """
-You are a commentator that reviews other reviews.
-Generate a brief mocking response based ONLY on the {predicted_review_score} and {review}. 
+You are a critic that reviews other reviews.
+Generate a brief humorous response based ONLY on the {predicted_review_score} and {review}. 
 """
 PROMPT_TEMPLATE = ChatPromptTemplate.from_template(TEMPLATE)
 
