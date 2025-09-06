@@ -1,6 +1,7 @@
 <h1>Movie/TV Review Classification Model</h1>
 
 <h2>Table of Contents</h2>
+
 <!-- TOC -->
   * [Overview](#overview)
     * [Project Structure](#project-structure)
@@ -15,6 +16,7 @@
 - Build & deploy an LSTM sentiment classifier trained on Amazon movie and TV reviews and predicts sentiment: negative, neutral, positive.
 - Generates simple GUI/webpage to allow the user to input new reviews for the classifier to predict in realtime.
 - Utilizes llama3.1 LLM as a creative method to convey the predicted rating and review of their review to the user.
+
 ### Project Structure
 ```
 ├── docker-compose.yml
@@ -52,6 +54,7 @@
 cd src
 uvicorn main:app --reload --port 8000
 ```
+
 ### With Docker
 #### Build & Run
 Builds and runs image/container in the background.
