@@ -1,0 +1,96 @@
+Breakdown of response variable: Counter({2: 133333, 1: 133333, 0: 133333})
+Epoch [1/12]: 100%|██████████| 17500/17500 [2:07:10<00:00,  2.29batch/s]  
+MODEL SAVED!
+Training Accuracy: 63.16% | Training Loss: 0.7913
+Validation Accuracy: 69.11% | Validation Loss: 0.6952
+Gradient Norm: 2.8452
+Learning Rate: 1.00e-04
+
+Epoch [2/12]: 100%|██████████| 17500/17500 [2:03:16<00:00,  2.37batch/s]  
+MODEL SAVED!
+Training Accuracy: 70.98% | Training Loss: 0.6592
+Validation Accuracy: 71.31% | Validation Loss: 0.6486
+Gradient Norm: 3.6292
+Learning Rate: 1.00e-04
+
+Epoch [3/12]: 100%|██████████| 17500/17500 [2:01:06<00:00,  2.41batch/s]  
+MODEL SAVED!
+Training Accuracy: 73.10% | Training Loss: 0.6185
+Validation Accuracy: 72.50% | Validation Loss: 0.6332
+Gradient Norm: 2.0815
+Learning Rate: 1.00e-04
+
+Epoch [4/12]: 100%|██████████| 17500/17500 [2:03:34<00:00,  2.36batch/s]  
+MODEL SAVED!
+Training Accuracy: 74.56% | Training Loss: 0.5890
+Validation Accuracy: 73.20% | Validation Loss: 0.6192
+Gradient Norm: 4.4513
+Learning Rate: 1.00e-04
+
+Epoch [5/12]: 100%|██████████| 17500/17500 [2:01:09<00:00,  2.41batch/s]  
+MODEL SAVED!
+Training Accuracy: 75.78% | Training Loss: 0.5640
+Validation Accuracy: 73.67% | Validation Loss: 0.6065
+Gradient Norm: 4.2620
+Learning Rate: 1.00e-04
+
+Epoch [6/12]: 100%|██████████| 17500/17500 [2:03:39<00:00,  2.36batch/s]  
+MODEL SAVED!
+Training Accuracy: 76.70% | Training Loss: 0.5450
+Validation Accuracy: 73.86% | Validation Loss: 0.6005
+Gradient Norm: 1.9039
+Learning Rate: 1.00e-04
+
+Epoch [7/12]: 100%|██████████| 17500/17500 [2:02:03<00:00,  2.39batch/s]  
+MODEL SAVED!
+Training Accuracy: 77.66% | Training Loss: 0.5256
+Validation Accuracy: 74.09% | Validation Loss: 0.6002
+Gradient Norm: 4.8465
+Learning Rate: 1.00e-04
+
+Epoch [8/12]: 100%|██████████| 17500/17500 [2:03:39<00:00,  2.36batch/s]  
+Training Accuracy: 78.49% | Training Loss: 0.5088
+Validation Accuracy: 74.48% | Validation Loss: 0.6049
+Gradient Norm: 2.4175
+Learning Rate: 1.00e-04
+
+Epoch [9/12]: 100%|██████████| 17500/17500 [1:59:40<00:00,  2.44batch/s]  
+Training Accuracy: 79.34% | Training Loss: 0.4918
+Validation Accuracy: 74.41% | Validation Loss: 0.6035
+Gradient Norm: 4.4006
+Learning Rate: 1.00e-04
+
+Epoch [10/12]: 100%|██████████| 17500/17500 [2:02:29<00:00,  2.38batch/s]   
+Training Accuracy: 80.05% | Training Loss: 0.4765
+Validation Accuracy: 74.63% | Validation Loss: 0.6119
+Gradient Norm: 9.2296
+Learning Rate: 1.00e-04
+
+Epoch [11/12]: 100%|██████████| 17500/17500 [1:59:56<00:00,  2.43batch/s]  
+Training Accuracy: 80.84% | Training Loss: 0.4604
+Validation Accuracy: 74.29% | Validation Loss: 0.6177
+Gradient Norm: 4.3249
+Learning Rate: 1.00e-05
+
+Epoch [12/12]: 100%|██████████| 17500/17500 [2:02:52<00:00,  2.37batch/s]  
+Training Accuracy: 82.98% | Training Loss: 0.4174
+Validation Accuracy: 74.76% | Validation Loss: 0.6257
+Gradient Norm: 5.0789
+Learning Rate: 1.00e-05
+
+Predicted Rating  Negative  Neutral  Positive
+Actual Rating                                
+Negative             29796     9074      1265
+Neutral               7397    27538      4883
+Positive              1609     6858     31580
+
+              precision    recall  f1-score   support
+
+    Negative       0.77      0.74      0.75     40135
+     Neutral       0.63      0.69      0.66     39818
+    Positive       0.84      0.79      0.81     40047
+
+    accuracy                           0.74    120000
+   macro avg       0.75      0.74      0.74    120000
+weighted avg       0.75      0.74      0.74    120000
+
