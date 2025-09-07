@@ -19,13 +19,8 @@
 
 ### Project Structure
 ```
-├── docker-compose.yml
-├── Dockerfile
-├── init_container.sh
-├── Movies_and_TV.jsonl
+├── Movies_and_TV.jsonl (LSTM classifier training/validation data)
 ├── README.md
-├── requirements.txt
-├── supervisord.conf
 ├── classifier/
     ├── accuracy_plot.png
     ├── cross_entropy_plot.png
@@ -38,10 +33,15 @@
      ├── main.py
 ├── static/
     └── style.css
-└── templates/
+├── templates/
     ├── base.html
     └── index.html
-
+└── docker/
+    ├── docker-compose.yml
+    ├── Dockerfile
+    ├── init_container.sh
+    ├── requirements.txt
+    └── supervisord.conf
 ```
 ### Descriptions
 - `classifier`: Directory containing LSTM classifier weights (.pt) and information on training/validation performance.
@@ -50,6 +50,7 @@
 
 ## Run App
 ### Without Docker
+From project's root, execute the following shell commands:
 ```
 cd src
 uvicorn main:app --reload --port 8000
@@ -57,7 +58,9 @@ uvicorn main:app --reload --port 8000
 
 ### With Docker
 #### Build & Run
-Builds and runs image/container in the background.
+Builds and runs image/container in the background. 
+From project's root, execute the following shell commands:
 ```
-docker compose up -d --build
+cd docker
+sudo docker compose up -d --build
 ```
