@@ -1,0 +1,15 @@
+services:
+  app:
+    container_name: sentiment_predictor_container
+    image: sentiment_predictor_image
+    build:
+      context: ./..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8000:8000"   # Uvicorn
+      - "11434:11434" # Ollama
+    volumes:
+      - ollama_models:/root/.ollama
+
+volumes:
+  ollama_models:
