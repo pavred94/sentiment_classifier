@@ -35,7 +35,7 @@ MODEL.load_state_dict(torch.load("../classifier/lstm_sentiment_classifier.pt", w
 MODEL.eval()
 
 # Define LLM prompt
-LLM_NAME = "llama3.1"
+LLM_NAME = "llama3.1:8b"
 LLM = ChatOllama(model=LLM_NAME, temperature=0.0)
 TEMPLATE = """
 You are a critic that reviews other reviews.
