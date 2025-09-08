@@ -1,4 +1,5 @@
 <h1>Movie/TV Review Classification Model</h1>
+(In Progress)
 
 <h2>Table of Contents</h2>
 
@@ -6,6 +7,7 @@
   * [Overview](#overview)
     * [Project Structure](#project-structure)
     * [Descriptions](#descriptions)
+    * [Data](#data)
   * [Run App](#run-app)
     * [Without Docker](#without-docker)
     * [With Docker](#with-docker)
@@ -30,7 +32,7 @@
      ├── constants.py
      ├── helper.py
      ├── lstm_analyzer.py
-     ├── main.py
+     └──  main.py
 ├── static/
     └── style.css
 ├── templates/
@@ -47,6 +49,10 @@
 - `classifier`: Directory containing LSTM classifier weights (.pt) and information on training/validation performance.
 - `src`: Directory containing Python code for project.
   - `lstm_analyzer.py`: Train and validation LSTM sentiment classifier.
+
+### Data
+- Link: https://amazon-reviews-2023.github.io/
+- The `Movies_and_TV` data under `Grouped by Category` section was used to train the sentiment classifier.
 
 ## Run App
 ### Without Docker
