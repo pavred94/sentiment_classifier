@@ -1,12 +1,12 @@
 <h1>Movie/TV Review Classification Model</h1>
-(In Progress)
+A sentiment analysis web application that classifies Amazon movie and TV reviews using a bi-directional LSTM neural network. The app provides real-time predictions with AI-powered responses using Llama 3.1:8b.
 
 <h2>Table of Contents</h2>
 
 <!-- TOC -->
   * [Overview](#overview)
     * [Project Structure](#project-structure)
-    * [Descriptions](#descriptions)
+    * [File Descriptions](#file-descriptions)
     * [Data](#data)
   * [Run App](#run-app)
     * [Without Docker](#without-docker)
@@ -14,18 +14,29 @@
       * [Build & Run](#build--run)
 <!-- TOC -->
 
+
 ## Overview
-- Build & deploy an LSTM sentiment classifier trained on Amazon movie and TV reviews and predicts sentiment: negative, neutral, positive.
-- Generates simple GUI/webpage to allow the user to input new reviews for the classifier to predict in realtime.
-- Utilizes llama3.1 LLM as a creative method to convey the predicted rating and review of their review to the user.
+
+This project builds and deploys a bi-directional LSTM (Long Short-Term Memory) sentiment classifier trained on Amazon movie and TV reviews. The model predicts sentiment across three categories: negative, neutral, and positive.
+
+### Features
+
+* **Bi-directional LSTM Neural Network**: Deep learning model for accurate sentiment classification
+* **Real-time Predictions**: Instant sentiment analysis through a web interface
+* **AI-Enhanced Responses**: Utilizes Llama 3.1:8b LLM to generate creative, contextual responses based on predictions
+* **Interactive Web UI**: Simple, user-friendly interface for inputting reviews
+* **Docker Support**: Containerized deployment for easy setup and portability
+* **Training Visualizations**: Accuracy and loss plots to monitor model performance
 
 ### Project Structure
+
 ```
 ├── Movies_and_TV.jsonl (LSTM classifier training/validation data)
 ├── README.md
 ├── classifier/
     ├── accuracy_plot.png
     ├── cross_entropy_plot.png
+    ├── example_webpage_output.png
     ├── lstm_analyzer.log
     └── lstm_sentiment_classifier.pt
 ├── src/
@@ -45,14 +56,51 @@
     ├── requirements.txt
     └── supervisord.conf
 ```
-### Descriptions
-- `classifier`: Directory containing LSTM classifier weights (.pt) and information on training/validation performance.
-- `src`: Directory containing Python code for project.
-  - `lstm_analyzer.py`: Train and validation LSTM sentiment classifier.
+
+### File Descriptions
+
+#### Classifier Directory
+* `accuracy_plot.png`: Visualization showing training and validation accuracy over epochs
+* `cross_entropy_plot.png`: Visualization showing cross-entropy loss during training and validation over epochs
+* `example_webpage_output.png`: Screenshot of the web interface showing a sample prediction
+* `lstm_analyzer.log`: Detailed logs from the training process
+* `lstm_sentiment_classifier.pt`: PyTorch model checkpoint containing trained weights
+
+#### Source Code Directory
+* `constants.py`: Defines hyperparameters/configuration for bi-directional LSTM classifier
+* `helper.py`: Contains utility functions for data preprocessing and text processing
+* `lstm_analyzer.py`: Implements the bi-directional LSTM model architecture, training loop, and validation
+* `main.py`: FastAPI application that serves the web interface and handles predictions
+
+#### Templates & Static
+* `base.html`: Base HTML template
+* `index.html`: Main page featuring the review input form and results display
+* `style.css`: CSS styles for the web interface
+
+#### Docker Directory
+* `docker-compose.yml`: Defines services, ports, and volumes for Docker deployment
+* `Dockerfile`: Instructions for building the Docker image
+* `init_container.sh`: Shell script to initialize the container environment
+* `requirements.txt`: Python package dependencies
+* `supervisord.conf`: Configuration for managing the Ollama and Uvicorn processes in the container
 
 ### Data
-- Link: https://amazon-reviews-2023.github.io/
-- The `Movies_and_TV` data under `Grouped by Category` section was used to train the sentiment classifier.
+
+* **Source**: [Amazon Reviews 2023 Dataset](https://amazon-reviews-2023.github.io/)
+* **Subset Used**: `Movies_and_TV` data from the "Grouped by Category" section
+* **Format**: JSONL (JSON Lines) format with review text and ratings
+* **Size**: Contains movie and TV product reviews from Amazon
+
+The dataset includes:
+- Review text
+- Star ratings (1-5)
+- Product metadata
+- Reviewer information
+
+**Sentiment Label Binning:**
+- **Negative**: 1-2 stars
+- **Neutral**: 3 stars
+- **Positive**: 4-5 stars
 
 ## Run App
 ### Without Docker
