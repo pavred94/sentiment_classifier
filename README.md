@@ -8,7 +8,8 @@ A sentiment analysis web application that classifies Amazon movie and TV reviews
     * [Project Structure](#project-structure)
     * [File Descriptions](#file-descriptions)
     * [Data](#data)
-  * [Run App](#run-app)
+  * [Installation & Setup](#installation--setup)
+    * [Prerequisites](#prerequisites)
     * [Without Docker](#without-docker)
     * [With Docker](#with-docker)
       * [Build & Run](#build--run)
@@ -102,13 +103,76 @@ The dataset includes:
 - **Neutral**: 3 stars
 - **Positive**: 4-5 stars
 
-## Run App
+## Installation & Setup
+
+### Prerequisites
+
+**Without Docker:**
+* Python 3.12 or higher
+* pip (Python package manager)
+* Virtual environment (recommended)
+* **Ollama 0.11.3** with Llama 3.1:8b model installed
+
+**With Docker:**
+* Docker Engine 29.1.3 or higher
+* Docker Compose 5.0.1 or higher
+
 ### Without Docker
-From project's root, execute the following shell commands:
+
+1. Clone the repository:
+```bash
+git clone https://github.com/pavred94/sentiment_classifier.git
+cd sentiment_classifier
 ```
+
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r docker/requirements.txt
+```
+
+4. Download the dataset:
+```
+# Download Movies_and_TV.jsonl from the Amazon Reviews 2023 dataset
+# Place it in the project root directory
+```
+
+5. Install and setup Ollama:
+- Linux: `curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.11.3 sh`
+- macOS/Windows: Download v0.11.3 from [https://github.com/ollama/ollama/releases/tag/v0.11.3](https://github.com/ollama/ollama/releases/tag/v0.11.3)
+
+**Pull the Llama 3.1:8b model:**
+```bash
+ollama pull llama3.1:8b
+```
+
+**Start Ollama server** (if not already running):
+```bash
+ollama serve
+```
+
+The Ollama API will be available at `http://localhost:11434`
+
+6. Run the application:
+
+From the project's root directory:
+
+```bash
 cd src
 uvicorn main:app --reload --port 8000
 ```
+
+The application will be available at `http://localhost:8000`
+
+**Options:**
+* `--reload`: Enable auto-reload on code changes (development mode)
+* `--port 8000`: Specify the port (default: 8000)
+* `--host 0.0.0.0`: Make the server accessible from other machines
 
 ### With Docker
 #### Build & Run
