@@ -13,8 +13,10 @@ A sentiment analysis web application that classifies Amazon movie and TV reviews
     * [Without Docker](#without-docker)
     * [With Docker](#with-docker)
       * [Build & Run](#build--run)
+      * [Stop Container](#stop-container)
+      * [View Logs](#view-logs)
+  * [Usage](#usage)
 <!-- TOC -->
-
 
 ## Overview
 
@@ -117,34 +119,28 @@ The dataset includes:
 * Docker Engine 29.1.3 or higher
 * Docker Compose 5.0.1 or higher
 
-### Without Docker
-
-1. Clone the repository:
+**Clone the repository:**
 ```bash
 git clone https://github.com/pavred94/sentiment_classifier.git
 cd sentiment_classifier
 ```
 
-2. Create and activate a virtual environment:
+### Without Docker
+
+1. Create and activate a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+2. Install dependencies:
 ```bash
 pip install -r docker/requirements.txt
 ```
 
-4. Download the dataset:
-```
-# Download Movies_and_TV.jsonl from the Amazon Reviews 2023 dataset
-# Place it in the project root directory
-```
-
-5. Install and setup Ollama:
+3. Install and setup Ollama:
 - Linux: `curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.11.3 sh`
-- macOS/Windows: Download v0.11.3 from [https://github.com/ollama/ollama/releases/tag/v0.11.3](https://github.com/ollama/ollama/releases/tag/v0.11.3)
+- MacOS/Windows: Download v0.11.3 from [https://github.com/ollama/ollama/releases/tag/v0.11.3](https://github.com/ollama/ollama/releases/tag/v0.11.3)
 
 **Pull the Llama 3.1:8b model:**
 ```bash
@@ -158,7 +154,7 @@ ollama serve
 
 The Ollama API will be available at `http://localhost:11434`
 
-6. Run the application:
+4. Run the application:
 
 From the project's root directory:
 
@@ -175,10 +171,48 @@ The application will be available at `http://localhost:8000`
 * `--host 0.0.0.0`: Make the server accessible from other machines
 
 ### With Docker
-#### Build & Run
-Builds and runs image/container in the background. 
-From project's root, execute the following shell commands:
+
+Ensure Docker and Docker Compose are installed:
+```bash
+docker --version
+docker compose version
 ```
+
+#### Build & Run
+
+Build and run the container in detached mode (background):
+
+```bash
 cd docker
 sudo docker compose up -d --build
 ```
+
+The application will be available at `http://localhost:8000`
+
+**Note**: The `--build` flag forces a rebuild of the image. Omit it for subsequent runs if no changes were made.
+
+#### Stop Container
+
+Stop the running container:
+
+```bash
+cd docker
+sudo docker compose down
+```
+
+To stop and remove volumes:
+
+```bash
+sudo docker compose down -v
+```
+
+#### View Logs
+
+View real-time logs:
+
+```bash
+sudo docker compose logs -f app
+```
+
+## Usage
+TODO
