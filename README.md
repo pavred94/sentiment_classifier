@@ -16,6 +16,7 @@ A sentiment analysis web application that classifies Amazon movie and TV reviews
       * [Stop Container](#stop-container)
       * [View Logs](#view-logs)
   * [Usage](#usage)
+  * [Model Training](#model-training)
 <!-- TOC -->
 
 ## Overview
@@ -215,4 +216,53 @@ sudo docker compose logs -f app
 ```
 
 ## Usage
+1. **Access the Web Interface**: Navigate to `http://localhost:8000` in your web browser
+
+2. **Input a Review**: Enter a movie or TV show review in the text area
+
+3. **Get Prediction**: Click the submit button to receive:
+   - Sentiment classification (Negative, Neutral, or Positive)
+   - AI-generated creative response from Llama 3.1:8b
+
+4. **Example Reviews to Try**:
+   - *Positive*: "This movie was absolutely fantastic! The acting was superb and the plot kept me engaged throughout."
+   - *Negative*: "Terrible show. Poor acting, weak storyline, and a complete waste of time."
+   - *Neutral*: "It was okay. Some parts were good, others not so much. Average overall."
+
+### Example Output
+
+![Example Webpage Output](classifier/example_webpage_output.png)
+
+*The web interface showing a positive review prediction with the LLM-generated response*
+
+## Model Training
+
+To train the model from scratch:
+
+1. Ensure the `Movies_and_TV.jsonl` dataset is in the project root (Reference [data section](#data))
+
+2. Run the training script:
+```bash
+cd src
+python lstm_analyzer.py
+```
+
+3. Training outputs:
+   - Model checkpoint: `lstm_sentiment_classifier.pt`
+   - Accuracy plot: `accuracy_plot.png`
+   - Loss plot: `cross_entropy_plot.png`
+   - Training logs: `lstm_analyzer.log`
+
+**Training Configuration** (defined in `src/constants.py` and `src/lstm_analyzer.py`):
+* **Embedding Dimension**: 100
+* **Hidden Layer Size**: 100
+* **Number of LSTM Layers**: 1
+* **Dropout Rate**: 0.0
+* **Output Dimension**: 3 (Negative, Neutral, Positive)
+* **Batch Size**: 16 (training), 128 (validation)
+* **Optimizer**: AdamW with learning rate 1e-4 and weight decay 5e-3
+* **Learning Rate Scheduler**: ReduceLROnPlateau (patience=3, factor=0.1)
+* **Number of Epochs**: 12
+
+## Model Performance
 TODO
