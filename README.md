@@ -17,6 +17,8 @@ A sentiment analysis web application that classifies Amazon movie and TV reviews
       * [View Logs](#view-logs)
   * [Usage](#usage)
   * [Model Training](#model-training)
+  * [Model Performance](#model-performance)
+  * [Technologies Used](#technologies-used)
 <!-- TOC -->
 
 ## Overview
@@ -265,4 +267,73 @@ python lstm_analyzer.py
 * **Number of Epochs**: 12
 
 ## Model Performance
+
+The model was trained for 12 epochs on the Amazon Movies and TV reviews dataset with 400,000 total samples (balanced across negative, neutral, and positive classes with 133,333 samples each). Below are the training and validation metrics:
+
+### Training Progress
+
+**The final model was saved at Epoch 7**, which achieved the **lowest validation loss (0.6002)** of all training epochs. This represents the optimal point before overfitting begins.
+
+| Epoch | Training Accuracy | Training Loss | Validation Accuracy | Validation Loss | Status |
+|-------|------------------|---------------|---------------------|-----------------|--------|
+| **Epoch 1** | 63.16% | 0.7913 | 69.11% | 0.6952 | MODEL SAVED! |
+| **Epoch 2** | 70.98% | 0.6592 | 71.31% | 0.6486 | MODEL SAVED! |
+| **Epoch 3** | 73.10% | 0.6185 | 72.50% | 0.6332 | MODEL SAVED! |
+| **Epoch 4** | 74.56% | 0.5890 | 73.20% | 0.6192 | MODEL SAVED! |
+| **Epoch 5** | 75.78% | 0.5640 | 73.67% | 0.6065 | MODEL SAVED! |
+| **Epoch 6** | 76.70% | 0.5450 | 73.86% | 0.6005 | MODEL SAVED! |
+| **Epoch 7** ✓ | **77.66%** | **0.5256** | **74.09%** | **0.6002** | **MODEL SAVED! (FINAL)** |
+| Epoch 8 | 78.49% | 0.5088 | 74.48% | 0.6049 | - |
+| Epoch 9 | 79.34% | 0.4918 | 74.41% | 0.6035 | - |
+| Epoch 10 | 80.05% | 0.4765 | 74.63% | 0.6119 | - |
+| Epoch 11 | 80.84% | 0.4604 | 74.29% | 0.6177 | - |
+| Epoch 12 | 82.98% | 0.4174 | 74.76% | 0.6257 | - |
+
+**Key Observations:**
+- **Epoch 1 → Epoch 7 (Final Model):**
+  - Training accuracy improved from **63.16%** to **77.66%** (+14.50%)
+  - Validation accuracy improved from **69.11%** to **74.09%** (+4.98%)
+  - Training loss decreased from **0.7913** to **0.5256** (-0.2657)
+  - Validation loss decreased from **0.6952** to **0.6002** (-0.0950), reaching its minimum
+- **After Epoch 7:** The model begins to overfit, as evidenced by:
+  - Validation loss increases from **0.6002** (Epoch 7) to **0.6257** (Epoch 12)
+  - Training loss continues to decrease while validation loss increases
+  - Widening gap between training and validation performance
+- **Epoch 7 produced the final model** used for predictions, representing the best generalization capability
+
+### Accuracy
+
+![Accuracy Plot](classifier/accuracy_plot.png)
+
+The gap between training and validation accuracy widens after Epoch 7, suggesting overfitting as training continues.
+
+### Loss (Cross Entropy)
+
+![Cross Entropy Plot](classifier/cross_entropy_plot.png)
+
+The validation loss plateaus around Epoch 6-7 while training loss continues to decrease, further indicating overfitting.
+
+### Classification Report (Final Model)
+
+The final model achieved **74% overall accuracy** on the validation set with the following per-class performance:
+
+| Sentiment | Precision | Recall | F1-Score | Support |
+|-----------|-----------|--------|----------|---------|
+| **Negative** | 0.77 | 0.74 | 0.75 | 40,135 |
+| **Neutral** | 0.63 | 0.69 | 0.66 | 39,818 |
+| **Positive** | 0.84 | 0.79 | 0.81 | 40,047 |
+| **Macro Avg** | **0.75** | **0.74** | **0.74** | **120,000** |
+
+**Performance Insights:**
+- **Positive** sentiment sees the best performance (F1: 0.81)
+- **Neutral** sentiment sees the least performance (F1: 0.66), likely due to the ambiguous nature of 3-star reviews
+- **Negative** sentiment shows a balanced performance (F1: 0.75)
+
+Future improvements could include:
+- **Additional data**: The dataset was limited due to computational constraints. Expanding the training set will almost certainly improve model performance and generalization
+- Additional regularization techniques (dropout, L2 regularization)
+- Data augmentation for neutral class to improve detection
+- Ensemble methods to improve neutral sentiment detection
+
+## Technologies Used
 TODO
