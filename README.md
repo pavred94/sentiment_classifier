@@ -19,6 +19,7 @@ A sentiment analysis web application that classifies Amazon movie and TV reviews
   * [Model Training](#model-training)
   * [Model Performance](#model-performance)
   * [Technologies Used](#technologies-used)
+  * [API Endpoints](#api-endpoints)
 <!-- TOC -->
 
 ## Overview
@@ -336,4 +337,107 @@ Future improvements could include:
 - Ensemble methods to improve neutral sentiment detection
 
 ## Technologies Used
-TODO
+
+### Backend
+* **Python 3.12**: Core programming language
+* **PyTorch**: Deep learning framework for bi-directional LSTM model
+* **FastAPI**: Modern web framework for building APIs
+* **Uvicorn**: ASGI server for running FastAPI
+
+### Frontend
+* **HTML5**: Markup for web interface
+* **CSS3**: Styling and layout
+* **Jinja2**: Template engine for dynamic HTML rendering
+
+### Machine Learning
+* **Bi-directional LSTM (Long Short-Term Memory)**: Recurrent neural network architecture that processes sequences in both forward and backward directions
+* **Llama 3.1:8b (via Ollama 0.11.3)**: Large language model for generating creative responses
+
+### DevOps & Deployment
+* **Docker Engine 29.1.3**: Containerization platform
+* **Docker Compose 5.0.1**: Multi-container orchestration
+* **Supervisor**: Process management in containers
+
+## API Endpoints
+
+The application provides a simple web interface for sentiment analysis through two HTTP endpoints. Both endpoints return HTML responses rendered using Jinja2 templates.
+
+---
+
+### `GET /`
+
+**Purpose**: Retrieves the main application interface
+
+**HTTP Method**: `GET`
+
+**Request**: No parameters required
+
+**Response**: 
+- **Content-Type**: `text/html`
+- **Status Code**: `200 OK`
+- **Body**: HTML page with sentiment analysis form
+
+**Response Structure**:
+The response renders `templates/index.html` with the following template variables:
+```python
+{
+    "request": request,
+    "user_input": None,
+    "predicted_score": None,
+    "llm_response": None
+}
+```
+
+**Usage Example**:
+```bash
+curl http://localhost:8000/
+```
+
+---
+
+### `POST /`
+
+**Purpose**: Submits a review for sentiment analysis and receives prediction results
+
+**HTTP Method**: `POST`
+
+**Request**:
+- **Content-Type**: `application/x-www-form-urlencoded`
+- **Form Data**:
+  - `user_input` (string, required): The movie or TV review text to analyze
+
+**Processing Flow**:
+1. Validates the user input using Pydantic (`ReviewInput` model with `min_length=1`)
+2. Tokenizes and encodes the text using BERT tokenizer
+3. Runs the encoded input through the bi-directional LSTM classifier
+4. Predicts sentiment class (Negative: 0, Neutral: 1, Positive: 2)
+5. Reverses label encoding to get human-readable label
+6. Generates creative response using Llama 3.1:8b via Ollama
+7. Renders results in HTML template
+
+**Response**:
+- **Content-Type**: `text/html`
+- **Status Code**: `200 OK`
+- **Body**: HTML page displaying the analysis results
+
+**Response Structure**:
+The response renders `templates/index.html` with populated template variables:
+```python
+{
+    "request": request,
+    "user_input": "I loved Sinbad. The animation was amazing. I will recommend it to others.",
+    "predicted_score": "Positive",
+    "llm_response": "The epitome of critical thinking. This reviewer's glowing assessment is so effusive..."
+}
+```
+
+**Usage Example**:
+```bash
+curl -X POST http://localhost:8000/ \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "user_input=This movie was absolutely fantastic!"
+```
+
+**Error Handling**:
+- Returns `400 Bad Request` if `user_input` is missing or empty
+- Returns `500 Internal Server Error` if model prediction or LLM generation fails
